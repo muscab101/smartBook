@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Loader2, CreditCard, TrendingUp, TrendingDown, Wallet } from "lucide-react"
+import CountUp from 'react-countup' // Waxaa lagu daray counter-ka
+
+// Shadcn Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -108,35 +111,54 @@ export default function FullDashboard() {
         <div className="text-right">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase">Cards Combined Balance</p>
           <p className="text-4xl font-bold text-slate-900 tracking-tighter">
-              ${stats.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {/* REAL-TIME COUNTER FOR TOTAL BALANCE */}
+            $<CountUp end={stats.balance} decimals={2} duration={2} separator="," />
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* INCOME CARD */}
         <Card className="rounded-sm border shadow-none">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Income</CardTitle>
             <TrendingUp className="h-4 w-4 text-rose-500" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-semibold text-rose-500">${stats.income.toLocaleString()}</div></CardContent>
+          <CardContent>
+            <div className="text-3xl font-semibold text-rose-500">
+              $<CountUp end={stats.income} duration={1.5} separator="," />
+            </div>
+          </CardContent>
         </Card>
+
+        {/* EXPENSE CARD */}
         <Card className="rounded-sm border shadow-none">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Expense</CardTitle>
             <TrendingDown className="h-4 w-4 text-slate-400" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-semibold">${stats.expense.toLocaleString()}</div></CardContent>
+          <CardContent>
+            <div className="text-3xl font-semibold">
+              $<CountUp end={stats.expense} duration={1.5} separator="," />
+            </div>
+          </CardContent>
         </Card>
+
+        {/* WALLETS CARD */}
         <Card className="rounded-sm border shadow-none">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Active Wallets</CardTitle>
             <Wallet className="h-4 w-4 text-primary" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-semibold text-primary">{cards.length} Cards</div></CardContent>
+          <CardContent>
+            <div className="text-3xl font-semibold text-primary">
+               <CountUp end={cards.length} duration={1} /> Cards
+            </div>
+          </CardContent>
         </Card>
       </div>
 
+      {/* GRAPH AND LIVE WALLETS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
         <Card className="lg:col-span-4 rounded-sm border shadow-none overflow-hidden">
           <CardHeader className="border-b py-4 px-6 flex flex-row items-center justify-between">
@@ -172,7 +194,9 @@ export default function FullDashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold">${Number(card.balance).toLocaleString()}</p>
+                  <p className="text-sm font-bold">
+                    $<CountUp end={Number(card.balance)} decimals={2} duration={1} separator="," />
+                  </p>
                   <p className="text-[9px] text-emerald-600 font-bold uppercase italic">Linked</p>
                 </div>
               </div>
