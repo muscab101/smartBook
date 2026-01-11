@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @layer base {
@@ -9,6 +10,13 @@
     --accent: 345 100% 97%; /* Very light pink for hover */
     --radius: 1.25rem;
   }
+}
+
+*{
+  font-family: "Outfit", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 @custom-variant dark (&:is(.dark *));
