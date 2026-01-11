@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
-import { LayoutDashboard, CreditCard, CalendarDays, LogOut, CircleDollarSign } from "lucide-react" // Waxaan ku daray CircleDollarSign
+import { LayoutDashboard, CreditCard, CalendarDays, LogOut, CircleDollarSign, MessageSquare } from "lucide-react" 
 import { 
   Sidebar, 
   SidebarContent, 
@@ -34,8 +34,10 @@ export function AppSidebar() {
   const menuItems = [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Cards", url: "/cards", icon: CreditCard },
-    { title: "Daily Spend", url: "/daily-spend", icon: CircleDollarSign }, // Item-ka cusub
-    { title: "Planning", url: "planning", icon: CalendarDays },
+    { title: "Daily Spend", url: "/daily-spend", icon: CircleDollarSign },
+    
+    { title: "AI Assistant", url: "/chat", icon: MessageSquare },
+    { title: "Planning", url: "/planning", icon: CalendarDays }, // Menu-ga Cusub
   ]
 
   return (

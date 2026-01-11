@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { createBrowserClient } from "@supabase/ssr"
-import { Plus, Wallet, Loader2, Trash2, AlertCircle, ShieldCheck } from "lucide-react"
+import { Plus, Wallet, Loader2, Trash2, AlertCircle, ShieldCheck, Zap } from "lucide-react"
+import { useSearchParams } from "next/navigation" // Waxaan ku daray kan
 
 // Shadcn Components
 import { Card } from "@/components/ui/card"
@@ -27,8 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-// --- TOAST LIFTED OUT ---
-// import { cn } from "@/lib/utils"
 
 export default function CardsPage() {
   const [cards, setCards] = useState<any[]>([])
@@ -36,6 +35,7 @@ export default function CardsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [userPlan, setUserPlan] = useState("free") 
+  const searchParams = useSearchParams() // Wixii URL-ka ku jira inaan akhrino
   
   // Form State
   const [cardName, setCardName] = useState("")
@@ -53,14 +53,18 @@ export default function CardsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
+      // 1. Marka hore soo aqri Profile-ka si aad u ogaato qorshaha (Plan)
       const { data: profile } = await supabase
         .from('profiles')
         .select('plan')
         .eq('id', user.id)
         .single()
       
-      if (profile) setUserPlan(profile.plan)
+      if (profile) {
+        setUserPlan(profile.plan)
+      }
 
+      // 2. Soo aqri kaadhadhka user-ka
       const { data: userCards } = await supabase
         .from('user_cards')
         .select('*')
@@ -72,11 +76,21 @@ export default function CardsPage() {
     setLoading(false)
   }, [supabase])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  // Tani waxay dhacaysaa marka bogga la soo galo ama lacag bixinta laga soo laabto
+  useEffect(() => { 
+    fetchData() 
+    
+    // Haddii URL-ka uu ku jiro ?success=true, dib u cusboonaysii xogta
+    if (searchParams.get('success')) {
+      fetchData()
+    }
+  }, [fetchData, searchParams])
 
+  // XISAABINTA LIMIT-KA (Tani waa halka adeegyada loogu furayo)
   const getMaxCards = () => {
-    if (userPlan === 'premium') return 10
-    if (userPlan === 'standard') return 5
+    const plan = userPlan?.toLowerCase()
+    if (plan === 'premium') return 10
+    if (plan === 'standard') return 5
     return 3 
   }
 
@@ -91,7 +105,7 @@ export default function CardsPage() {
     
     if (user) {
       if (isLimitReached) {
-        alert(`Limit Reached: Upgrade your plan to add more than ${MAX_CARDS_LIMIT} cards.`)
+        alert(`Limit Reached: Upgrade to ${userPlan === 'free' ? 'Standard' : 'Premium'} to add more.`)
         setIsSubmitting(false)
         setIsOpen(false)
         return
@@ -137,7 +151,10 @@ export default function CardsPage() {
         <div className="space-y-4 w-full md:w-1/2">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-semibold tracking-tight">My Wallets</h1>
-            <Badge className="bg-rose-600 rounded-sm text-[10px] uppercase font-semibold px-2 py-0.5 shadow-sm">
+            <Badge className={cn(
+              "rounded-sm text-[10px] uppercase font-semibold px-2 py-0.5 shadow-sm",
+              userPlan === 'premium' ? "bg-amber-500" : userPlan === 'standard' ? "bg-blue-600" : "bg-rose-600"
+            )}>
               {userPlan} Plan
             </Badge>
           </div>
@@ -152,7 +169,7 @@ export default function CardsPage() {
             <div className="h-1.5 w-full bg-secondary rounded-sm overflow-hidden">
                <div 
                  className={`h-full transition-all duration-700 ${isLimitReached ? 'bg-rose-600' : 'bg-rose-500'}`} 
-                 style={{ width: `${usagePercentage}%` }}
+                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
                />
             </div>
           </div>
@@ -161,7 +178,7 @@ export default function CardsPage() {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button 
-              className={`rounded-sm h-11 px-6 font-semibold transition-all ${isLimitReached ? 'opacity-50 cursor-not-allowed' : 'bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20'}`}
+              className={`rounded-sm h-11 px-6 font-semibold transition-all ${isLimitReached ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20'}`}
               disabled={isLimitReached}
             >
               <Plus className="mr-2 h-4 w-4" /> {isLimitReached ? "Limit Reached" : "Add New Card"}
@@ -187,7 +204,6 @@ export default function CardsPage() {
                     <SelectContent className="rounded-sm">
                       <SelectItem value="Visa" className="font-semibold">Visa</SelectItem>
                       <SelectItem value="Mastercard" className="font-semibold">Mastercard</SelectItem>
-                      <SelectItem value="Lloyds" className="font-semibold">Lloyds</SelectItem>
                       <SelectItem value="Cash" className="font-semibold">Cash</SelectItem>
                     </SelectContent>
                   </Select>
@@ -213,16 +229,24 @@ export default function CardsPage() {
         </Dialog>
       </div>
 
-      {/* Upgrade Banner */}
+      {/* UPGRADE BANNER (Dhiirigelin haddii uu limit-ku dhammaado) */}
       {isLimitReached && userPlan !== 'premium' && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-sm flex items-center justify-between">
-           <div className="flex items-center gap-3">
-             <ShieldCheck className="h-5 w-5 text-rose-600" />
-             <p className="text-xs font-semibold text-rose-900">
-               You've reached your {userPlan} limit. Upgrade to add more wallets!
-             </p>
-           </div>
-           <Button variant="link" className="text-rose-600 font-semibold text-xs underline">Upgrade Now</Button>
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-rose-100 p-2 rounded-full">
+                <Zap className="h-5 w-5 text-rose-600 fill-rose-600" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-rose-900 uppercase tracking-tight">Upgrade for more power!</p>
+                <p className="text-xs text-rose-700">You've reached the {userPlan} limit. Upgrade now to unlock more wallets.</p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => window.location.href = '/#pricing'}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] uppercase px-6 h-9 rounded-sm"
+            >
+              Upgrade Plan
+            </Button>
         </div>
       )}
 
@@ -232,16 +256,16 @@ export default function CardsPage() {
           const isLowBalance = card.spending_limit > 0 && Number(card.balance) <= Number(card.spending_limit);
 
           return (
-            <Card key={card.id} className="rounded-sm border-none overflow-hidden group relative shadow-md">
+            <Card key={card.id} className="rounded-sm border-none overflow-hidden group relative shadow-md hover:shadow-xl transition-all duration-300">
               <div className={cn(
                 "h-60 p-6 flex flex-col justify-between text-white relative overflow-hidden",
                 card.card_type === 'Visa' ? 'bg-gradient-to-br from-slate-800 to-slate-950' :
                 card.card_type === 'Mastercard' ? 'bg-gradient-to-br from-rose-500 to-rose-700' :
-                card.card_type === 'Lloyds' ?'bg-gradient-to-br from-amber-400 to-orange-600' :'bg-gradient-to-br from-emerald-500 to-emerald-700' 
+                'bg-gradient-to-br from-emerald-500 to-emerald-700' 
               )}>
                 
                 {isLowBalance && (
-                  <div className="absolute inset-x-0 top-0 bg-yellow-400/90 text-black text-[10px] font-bold py-1.5 flex items-center justify-center gap-2 z-20 animate-pulse">
+                  <div className="absolute inset-x-0 top-0 bg-yellow-400/90 text-black text-[10px] font-bold py-1.5 flex items-center justify-center gap-2 z-20">
                     <AlertCircle className="h-3.5 w-3.5" />
                     LOW BALANCE WARNING
                   </div>
@@ -255,7 +279,7 @@ export default function CardsPage() {
                        {[...Array(9)].map((_, i) => <div key={i} className="border-[0.5px] border-black/40" />)}
                      </div>
                   </div>
-                  <Badge className="rounded-full bg-white/20 text-[10px] backdrop-blur-md border-none px-3 font-semibold">
+                  <Badge className="rounded-full bg-white/20 text-[10px] backdrop-blur-md border-none px-3 font-semibold uppercase">
                     {card.card_type}
                   </Badge>
                 </div>
@@ -266,14 +290,14 @@ export default function CardsPage() {
                     <span className={cn("text-3xl font-bold tracking-tight", isLowBalance ? "text-yellow-300" : "text-white")}>
                       ${Number(card.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs opacity-50 font-light">USD</span>
+                    <span className="text-xs opacity-50 font-light tracking-widest">USD</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-end z-10 pt-4 border-t border-white/10">
                   <div className="space-y-0.5">
                     <p className="text-[9px] font-medium opacity-60">CARD HOLDER</p>
-                    <p className="text-sm font-semibold tracking-wide truncate max-w-[150px]">
+                    <p className="text-sm font-semibold tracking-wide truncate max-w-[150px] uppercase">
                       {card.card_name}
                     </p>
                   </div>
@@ -286,7 +310,7 @@ export default function CardsPage() {
                      <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-7 w-7 text-white/40 hover:text-rose-400 hover:bg-white/10 rounded-full"
+                        className="h-7 w-7 text-white/40 hover:text-rose-400 hover:bg-white/10 rounded-full transition-colors"
                         onClick={() => deleteCard(card.id)}
                      >
                         <Trash2 className="h-4 w-4" />

@@ -15,7 +15,8 @@ import {
   ShieldCheck, 
   BellRing,
   LogOut,
-  LayoutDashboard 
+  LayoutDashboard,
+  Loader2
 } from "lucide-react"
 import { useRouter } from 'next/navigation';
 import { ModeToggle } from '@/components/ModeToggle'
@@ -77,6 +78,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -98,11 +100,44 @@ export default function LandingPage() {
     router.refresh();
   };
 
-  const handlePurchase = (plan: string) => {
+  // Nidaamka Cusub ee Lacag bixinta
+  const handlePurchase = async (plan: string) => {
+    if (plan.toLowerCase() === "free") {
+      router.push('/dashboard');
+      return;
+    }
+
     if (!user) {
       router.push('/login');
-    } else {
-      router.push(`/checkout?plan=${plan.toLowerCase()}`);
+      return;
+    }
+
+    try {
+      setIsRedirecting(plan); 
+      
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: plan.toLowerCase(),
+          userId: user.id,
+          email: user.email,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Cilad ayaa dhacday.");
+      }
+
+      if (data.url) {
+        window.location.assign(data.url); // Halkan ayuu qofka u dirayaa Stripe
+      }
+    } catch (err: any) {
+      alert(`Cilad: ${err.message}`);
+    } finally {
+      setIsRedirecting(null);
     }
   };
 
@@ -243,7 +278,13 @@ export default function LandingPage() {
                   <PriceFeature text="PDF/CSV Export" />
                   <PriceFeature text="Real-time Sync" />
                 </div>
-                <Button onClick={() => handlePurchase("Standard")} className="w-full h-11 rounded-sm font-bold bg-rose-600 hover:bg-rose-700 text-white uppercase text-[10px] tracking-widest shadow-lg shadow-rose-500/30">Go Standard</Button>
+                <Button 
+                  disabled={isRedirecting === "Standard"}
+                  onClick={() => handlePurchase("Standard")} 
+                  className="w-full h-11 rounded-sm font-bold bg-rose-600 hover:bg-rose-700 text-white uppercase text-[10px] tracking-widest shadow-lg shadow-rose-500/30"
+                >
+                  {isRedirecting === "Standard" ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : "Go Standard"}
+                </Button>
               </div>
 
               {/* Premium */}
@@ -259,7 +300,13 @@ export default function LandingPage() {
                   <PriceFeature text="Tax Tools" />
                   <PriceFeature text="24/7 Priority Support" />
                 </div>
-                <Button onClick={() => handlePurchase("Premium")} className="w-full h-11 rounded-sm font-bold bg-slate-900 hover:bg-rose-600 text-white uppercase text-[10px] tracking-widest transition-colors">Get Premium</Button>
+                <Button 
+                  disabled={isRedirecting === "Premium"}
+                  onClick={() => handlePurchase("Premium")} 
+                  className="w-full h-11 rounded-sm font-bold bg-slate-900 hover:bg-rose-600 text-white uppercase text-[10px] tracking-widest transition-colors"
+                >
+                  {isRedirecting === "Premium" ? <Loader2 className="animate-spin h-4 w-4 mx-auto" /> : "Get Premium"}
+                </Button>
               </div>
 
             </div>
