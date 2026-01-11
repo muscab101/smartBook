@@ -6,11 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Mail, Lock } from "lucide-react"; 
 import { supabase } from "@/lib/supabase/client";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Function-kan wuxuu iskeed u helayaa URL-ka saxda ah
+  const getURL = () => {
+    let url =
+      process?.env?.NEXT_PUBLIC_SITE_URL ?? // Ku dar kan Vercel Settings
+      process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Vercel ayaa bixisa kan
+      window.location.origin; // Localhost
+    
+    // Hubi inuu ku bilaawdo http ama https
+    url = url.includes('http') ? url : `https://${url}`;
+    return url;
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,14 +37,15 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // Halkan waxaan u bedelay dynamic URL
+        redirectTo: `${getURL()}/auth/callback`,
       },
     });
     if (error) alert(error.message);
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-slate-50 dark:bg-slate-950 p-4 transition-colors duration-300">
+    <div className="flex justify-center items-center min-h-screen bg-slate-50 dark:bg-rose-800 p-4 transition-colors duration-300">
       <Card className="w-full max-w-md shadow-lg dark:border-slate-800 dark:bg-slate-900">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center dark:text-white">Welcome Back</CardTitle>
@@ -41,7 +55,6 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           
-          {/* Google Button */}
           <Button 
             variant="outline" 
             onClick={handleGoogleLogin} 
@@ -69,8 +82,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="grid gap-3">
-              {/* Email Input with Icon */}
-              <div className="relative">
+                <div>
+                    <Label className=" my-3">Email</Label>
+                    <div className="relative">
+                
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type="email" 
@@ -80,9 +95,12 @@ export default function LoginPage() {
                   required 
                 />
               </div>
-
-              {/* Password Input with Icon */}
-              <div className="relative">
+                </div>
+              
+              <div>
+                <Label className="my-3" >Password</Label>
+                <div className="relative mt-1">
+                
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type="password" 
@@ -92,9 +110,11 @@ export default function LoginPage() {
                   required 
                 />
               </div>
+              </div>
+             
             </div>
             <Button 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
+                className="w-full bg-rose-600 hover:bg-rose-700 transition-all duration-300 text-white" 
                 type="submit" 
                 disabled={loading}
             >
