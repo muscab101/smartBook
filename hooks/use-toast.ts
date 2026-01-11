@@ -2,8 +2,9 @@
 
 import * as React from "react"
 
-// Waxaan halkan ku qeexnay Types-ka si aysan ugu baahannin folder maqan
+// --- TYPES (Waxa aan ku qeexnay halkan si looga kaaftoomo components maqan) ---
 type ToastActionElement = React.ReactElement
+
 interface ToastProps {
   id?: string
   title?: React.ReactNode
@@ -34,12 +35,32 @@ function genId() {
   return count.toString()
 }
 
+// --- REDUCER ---
 export const reducer = (state: any, action: any) => {
   switch (action.type) {
-    case "ADD_TOAST": return { ...state, toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT) }
-    case "DISMISS_TOAST": return { ...state, toasts: state.toasts.map((t: any) => t.id === action.toastId || action.toastId === undefined ? { ...t, open: false } : t) }
-    case "REMOVE_TOAST": return { ...state, toasts: action.toastId === undefined ? [] : state.toasts.filter((t: any) => t.id !== action.toastId) }
-    default: return state
+    case "ADD_TOAST":
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      }
+    case "DISMISS_TOAST":
+      return {
+        ...state,
+        toasts: state.toasts.map((t: any) =>
+          t.id === action.toastId || action.toastId === undefined
+            ? { ...t, open: false }
+            : t
+        ),
+      }
+    case "REMOVE_TOAST":
+      return {
+        ...state,
+        toasts: action.toastId === undefined 
+          ? [] 
+          : state.toasts.filter((t: any) => t.id !== action.toastId),
+      }
+    default:
+      return state
   }
 }
 
@@ -51,18 +72,42 @@ function dispatch(action: any) {
   listeners.forEach((listener) => listener(memoryState))
 }
 
+// --- MAIN FUNCTIONS ---
 export function toast({ ...props }: any) {
   const id = genId()
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-  dispatch({ type: "ADD_TOAST", toast: { ...props, id, open: true, onOpenChange: (open: any) => { if (!open) dismiss() } } })
+  
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open: any) => {
+        if (!open) dismiss()
+      },
+    },
+  })
+
   return { id, dismiss }
 }
 
 export function useToast() {
   const [state, setState] = React.useState(memoryState)
+
   React.useEffect(() => {
     listeners.push(setState)
-    return () => { const index = listeners.indexOf(setState); if (index > -1) listeners.splice(index, 1) }
+    return () => {
+      const index = listeners.indexOf(setState)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
   }, [state])
-  return { ...state, toast, dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }) }
+
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+  }
 }
