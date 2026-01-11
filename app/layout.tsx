@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SmartBook - Finance Management",
-  description: "Minimalist tool for tracking your daily expenses",
+  title: "SmartBook",
+  description: "Finance Management App",
 };
 
 export default function RootLayout({
@@ -25,9 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -35,9 +33,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          {/* Hadii aad dib u rakibto Sonner ama Toast, 
-              halkan ayaad dhigi doontaa <Toaster /> 
-          */}
         </ThemeProvider>
       </body>
     </html>

@@ -26,8 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+// --- TOAST LIFTED OUT ---
+// import { cn } from "@/lib/utils"
 
 export default function CardsPage() {
   const [cards, setCards] = useState<any[]>([])
@@ -42,7 +43,6 @@ export default function CardsPage() {
   const [initialBalance, setInitialBalance] = useState("")
   const [cardLimit, setCardLimit] = useState("") 
 
-  const { toast } = useToast()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -53,7 +53,6 @@ export default function CardsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
-      // Fetch user plan from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('plan')
@@ -75,7 +74,6 @@ export default function CardsPage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  // Logic for dynamic limits
   const getMaxCards = () => {
     if (userPlan === 'premium') return 10
     if (userPlan === 'standard') return 5
@@ -93,11 +91,7 @@ export default function CardsPage() {
     
     if (user) {
       if (isLimitReached) {
-        toast({ 
-          title: "Limit Reached", 
-          description: `Upgrade your plan to add more than ${MAX_CARDS_LIMIT} cards.`, 
-          variant: "destructive" 
-        })
+        alert(`Limit Reached: Upgrade your plan to add more than ${MAX_CARDS_LIMIT} cards.`)
         setIsSubmitting(false)
         setIsOpen(false)
         return
@@ -114,7 +108,6 @@ export default function CardsPage() {
         }])
 
       if (!error) {
-        toast({ title: "Success", description: "Card saved successfully!" })
         setIsOpen(false)
         setCardName(""); setInitialBalance(""); setCardLimit(""); fetchData() 
       }
@@ -127,7 +120,6 @@ export default function CardsPage() {
     const { error } = await supabase.from('user_cards').delete().eq('id', id)
     if (!error) {
       setCards(cards.filter(c => c.id !== id))
-      toast({ title: "Deleted", description: "Card removed successfully" })
     }
   }
 
@@ -234,7 +226,7 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* CARDS GRID - (Original Card Design Unchanged) */}
+      {/* CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {cards.map((card) => {
           const isLowBalance = card.spending_limit > 0 && Number(card.balance) <= Number(card.spending_limit);

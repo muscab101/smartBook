@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
 
 export default function DailySpendPage() {
   const [loading, setLoading] = useState(true)
@@ -22,7 +21,6 @@ export default function DailySpendPage() {
   const [category, setCategory] = useState("Food")
   const [description, setDescription] = useState("")
 
-  const { toast } = useToast()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -55,11 +53,12 @@ export default function DailySpendPage() {
     const spendAmount = Number(amount)
     const currentCard = cards.find(c => c.id === selectedCardId)
 
-    if (!currentCard) return toast({ title: "Error", description: "Please select a card", variant: "destructive" })
-    if (spendAmount <= 0) return toast({ title: "Error", description: "Amount must be greater than 0", variant: "destructive" })
+    // Validation: Alert ayaa loo isticmaalay halkii toast laga isticmaali lahaa
+    if (!currentCard) return alert("Error: Please select a card")
+    if (spendAmount <= 0) return alert("Error: Amount must be greater than 0")
     
     if (spendAmount > Number(currentCard.balance)) {
-      return toast({ title: "Insufficient Balance", description: "Card balance is too low", variant: "destructive" })
+      return alert("Insufficient Balance: Card balance is too low")
     }
 
     setIsSubmitting(true)
@@ -82,9 +81,15 @@ export default function DailySpendPage() {
           .eq('id', selectedCardId)
 
         if (!updateError) {
-          toast({ title: "Success", description: `-$${spendAmount} deducted from ${currentCard.card_name}` })
-          setAmount(""); setDescription(""); fetchData() 
+          // Success action
+          setAmount("")
+          setDescription("")
+          fetchData() 
+        } else {
+          console.error("Update error:", updateError)
         }
+      } else {
+        console.error("Expense error:", expenseError)
       }
     }
     setIsSubmitting(false)
