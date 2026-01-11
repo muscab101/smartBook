@@ -188,7 +188,7 @@ export default function CardsPage() {
                       <SelectItem value="Visa" className="font-semibold">Visa</SelectItem>
                       <SelectItem value="Mastercard" className="font-semibold">Mastercard</SelectItem>
                       <SelectItem value="Lloyds" className="font-semibold">Lloyds</SelectItem>
-                      <SelectItem value="e-Dahab" className="font-semibold">Cash / e-Dahab</SelectItem>
+                      <SelectItem value="Cash" className="font-semibold">Cash</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
